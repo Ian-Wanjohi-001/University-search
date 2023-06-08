@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 20px;
+    }
+
+    h1 {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+
+    .search-panel {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+
+    .search-panel input[type="text"] {
+      padding: 10px;
+      font-size: 16px;
+      width: 300px;
+      margin-right: 10px;
+    }
+
+    .search-panel button {
+      padding: 10px 20px;
+      font-size: 16px;
+      background-color: #4CAF50;
+      color: #fff;
+      border: none;
+      cursor: pointer;
+      margin-right: 10px;
+    }
+    .search-panel button.search:hover {
+      background-color: #4d2fd3;
+      color: #0dbd25;
+    }
+
+    .search-panel button.clear {
+      background-color: #f44336;
+      color: #fff;
+      transition: background-color 0.3s, color 0.3s;
+      border-radius: 5px;
+    }
+
+    .search-panel button.clear:hover {
+      background-color: #4d2fd3;
+      color: #0dbd25;
+    }
+
+    .search-panel ul {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+      text-align: left;
+    }
+
+    .search-panel ul li {
+      padding: 10px;
+      border-bottom: 1px solid #ccc;
+    }
+
+    .search-panel ul li:last-child {
+      border-bottom: none;
+    }
+
+    .loading-message {
+      text-align: center;
+      color: #4CAF50;
+    }
+
+    .university-link {
+      color: black;
+      text-decoration: none;
+    }
+
+    .result-count {
+      text-align: center;
+      font-size: 14px;
+      margin-top: 10px;
+      color:#f44336;
+      font-family: sans-serif;
+      font-weight: bold;
+
+    }
+  </style>
+</head>
+<body>
+  <div id="app"></div>
+  <script src="https://unpkg.com/react@18/umd/react.development.js" crossorigin></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" crossorigin></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+  <script type="text/babel">
+    const { useState, useEffect } = React;
+
+    const SearchPanel = () => {
+      const [searchParam, setSearchParam] = useState('');
+      const [universities, setUniversities] = useState([]);
+      const [isLoading, setIsLoading] = useState(false);
+
+      const fetchUniversities = () => {
+        setIsLoading(true);
+        fetch(`http://universities.hipolabs.com/search?country=${searchParam}`)
+          .then((response) => response.json())
+          .then((data) => {
+            setUniversities(data);
+            setIsLoading(false);
+          })
+          .catch((error) => {
+            console.error('Error fetching universities:', error);
+            setIsLoading(false);
+          });
+      };
+
+      const handleSearchChange = (event) => {
+        setSearchParam(event.target.value);
+      };
+
+      const handleSearch = () => {
+        // Triggers search when the search button is clicked
+        fetchUniversities();
+      };
+
+      const handleClear = () => {
+        // Clear search and results
+        setSearchParam('');
+        setUniversities([]);
+      };
+
+      useEffect(() => {
+        const updateUniversityCount = () => {
+          const countElement = document.getElementById('result-count');
+          if (countElement) {
+            countElement.textContent = `Number of universities: ${universities.length}`;
+          }
+        };
+        updateUniversityCount();
+      }, [universities]);
+
+      return (
+        <div className="search-panel">
+            <p id="result-count" className="result-count">Number of universities: {universities.length}</p>
+          <button className="search" onClick={handleSearch}>Search</button>
+          <input type="text" value={searchParam} onChange={handleSearchChange} placeholder="Enter country name" />
+          <button className="clear" onClick={handleClear}>Reset</button>
+          {isLoading ? (
+            <p className="loading-message">Loading 🔄 ...</p>
+          ) : (
+            <div>
+              <ul>
+                {universities.map((university) => (
+                  <li key={university.name}>
+                    <a className="university-link" href={university.web_pages[0]} target="_blank" rel="noopener noreferrer">
+                      {university.name} - {university.country}
+                    </a>
+                  </li>
+                ))}
+              </ul>
+              
+            </div>
+          )}
+        </div>
+      );
+    };
+
+    ReactDOM.render(<SearchPanel />, document.getElementById('app'));
+  </script>
+</body>
+</html>
